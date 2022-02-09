@@ -1,5 +1,5 @@
 # GIL(Global Interpreter Lock)
->이번 글에 설명하는 내용은 다양한 파이썬 [구현체](https://github.com/vinta/awesome-python#implementations) 중 가장 오래되고 많이 사용하는 c 언어로 구현된 cpython을 바탕으로 한 내용입니다.
+>이번 글에 설명하는 내용은 다양한 파이썬 [구현체](https://github.com/vinta/awesome-python#implementations) 중 가장 오래되고 많이 사용하는 c 언어로 구현된 Cpython을 바탕으로 한 내용입니다.
 
 # 1. GIL 이란?
 > Global Interpreter Lock  
@@ -30,6 +30,93 @@
 `race conditions`
 앞서 말한 것처럼 프로세스에 속한 여러 스레드는 공유되는 메모리의 객체에 접근할 수 있다고 했다. 이 때 여러 스레드가 동시에 동일한 객체에 접근하면 우리가 원치 않는 방향으로 객체가 읽히거나 변경 될 수 있는 상태를 말한다. 이런 상황을 우리는 `thread-safe` 하지 않다고 표현한다.
 
+```python
+class MultiThread():
+
+    def __init__(self):
+        self.x = 0
+
+    def add(self):
+        for _ in range(1000000):
+            self.x += 1
+    
+    def main(self):
+        t1 = Thread(target=self.add)
+        t2 = Thread(target=self.add)
+
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        return self.x
+
+if __name__ == '__main__':
+    for i in range(1,11):
+        x = MultiThread().main()
+        print(f'{i:02}번 째 값: {x}')
+
+# Output
+# 원하는 결과는 2000000 이었지만
+# self.x += 1 에서 공유 객체의 값을 가져오고 1을 더하고 다시 할당하는 과정에서
+# 중간에 다른 스레드가 실행되면서 원하는 값을 얻지 못하고 있다.
+01번 째 값: 1175074
+02번 째 값: 1787188
+03번 째 값: 1577465
+04번 째 값: 1351959
+05번 째 값: 1510694
+06번 째 값: 1379084
+07번 째 값: 1422894
+08번 째 값: 1637616
+09번 째 값: 1435266
+10번 째 값: 1485491
+```
+
+```python
+from threading import Thread, Lock
+
+class MultiThread():
+
+    def __init__(self):
+        self.x = 0
+        self.mutex = Lock()
+
+    def add(self):
+        with self.mutex: # mutex acquire and release
+            for _ in range(1000000):
+                self.x += 1
+    
+    def main(self):
+        t1 = Thread(target=self.add)
+        t2 = Thread(target=self.add)
+
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        return self.x
+
+if __name__ == '__main__':
+    for i in range(1,11):
+        x = MultiThread().main()
+        print(f'{i:02}번 째 값: {x}')
+
+# Output
+# 스레드가 실행 될 때 mutex를 획득하고 작업이 끝나면 release 해준다.
+# 하나의 스레드가 공유된 객체에 접근하여 작업을 끝낼때 까지 다른 접근을 막는다.
+01번 째 값: 2000000
+02번 째 값: 2000000
+03번 째 값: 2000000
+04번 째 값: 2000000
+05번 째 값: 2000000
+06번 째 값: 2000000
+07번 째 값: 2000000
+08번 째 값: 2000000
+09번 째 값: 2000000
+10번 째 값: 2000000
+```
+
 `CPython's memory management is not thread-safe`
 파이썬은 메모리 관리 방식은 객체의 참조 횟수(reference count)를 통해 GC(Garbage Collection)가 동작하면서 이뤄진다. 객체가 레퍼런스의 참조에 따라 count를 늘리고 줄이면서 count 가 0 이 되면 메모리에서 삭제한다.   
 이 때 여러 스레드가 인터프리터를 동시에 실행시키면 reference count 가 정상적으로 이뤄지지 않아 없어져야 할 객체가 남아있거나 그 반대가 될 수 있어 thread safe 않다.
@@ -39,4 +126,4 @@
 
 GIL 때문에 멀티 스레드 환경에서 병렬적인 작업에 대한 문제가 있음에도 GIL을 들어내는 것은 매우 어려운 일이다. 기존의 다른 라이브러리, 패키지, 기능들은 GIL에 의존하고 있기 때문에 대체할 무언가를 찾지 않고 그냥 없애는 것은 불가능할 것이다. 그래서 파이썬은 [기준](https://wiki.python.org/moin/GlobalInterpreterLock) 을 가지고 GIL을 대체할 수 있는 방안이 있다면 언제든 [검토할 것이라고 말한다.](https://www.artima.com/weblogs/viewpost.jsp?thread=214235)
 
-실제 2021년 GIL을 제거한 cpython 버전을 제시한 사람이 있는데 이와 관련된 소스 코드는 [깃허브](https://github.com/colesbury/nogil), 더 자세한 세부사항과 원리에 대해 설명한 [문서](https://docs.google.com/document/d/18CXhDb1ygxg-YXNBJNzfzZsDFosB5e6BfnXLlejd9l0/edit#heading=h.gtyhlgwk321s)를 통해 확인해 볼 수 있다.
+실제 2021년 GIL을 제거한 Cpython 버전을 제시한 사람이 있는데 이와 관련된 소스 코드는 [깃허브](https://github.com/colesbury/nogil), 더 자세한 세부사항과 원리에 대해 설명한 [문서](https://docs.google.com/document/d/18CXhDb1ygxg-YXNBJNzfzZsDFosB5e6BfnXLlejd9l0/edit#heading=h.gtyhlgwk321s)를 통해 확인해 볼 수 있다.
