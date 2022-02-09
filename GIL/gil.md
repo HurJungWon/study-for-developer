@@ -34,6 +34,9 @@
 파이썬은 메모리 관리 방식은 객체의 참조 횟수(reference count)를 통해 GC(Garbage Collection)가 동작하면서 이뤄진다. 객체가 레퍼런스의 참조에 따라 count를 늘리고 줄이면서 count 가 0 이 되면 메모리에서 삭제한다.   
 이 때 여러 스레드가 인터프리터를 동시에 실행시키면 reference count 가 정상적으로 이뤄지지 않아 없어져야 할 객체가 남아있거나 그 반대가 될 수 있어 thread safe 않다.
 
-즉 파이썬은 객체의 reference count의 정상 동작을 위해 mutex를 사용하는 것인데, 모든 것이 객체인 파이썬에서 객체 하나 하나에 mutex 를 사용하는 것은 큰 성능 저하를 가져오고 mutex 를 가져오고 풀어주는 과정에서 사용자가 실수할 가능성이 높기 때문에 인터프리터 자체를 잠궈서 객체 참조 횟수에 대한 race condition을 해결한 것이다. 
-<br></br>
-# 3. 다른 언어에서 thread safe 동작 방법
+즉 파이썬은 객체의 reference count의 정상 동작을 위해 mutex를 사용하는 것인데, 모든 것이 객체인 파이썬에서 객체 하나 하나에 mutex 를 사용하는 것은 큰 성능 저하를 가져오고 사용자가 직접 mutex 를 가져오고 풀어주는 과정에서 실수할 가능성이 높기 때문에 인터프리터 자체를 잠궈서 객체 참조 횟수에 대한 race condition을 해결한 것이다. 
+분명히 파이썬은   
+
+GIL 때문에 멀티 스레드 환경에서 병렬적인 작업에 대한 문제가 있음에도 GIL을 들어내는 것은 매우 어려운 일이다. 기존의 다른 라이브러리, 패키지, 기능들은 GIL에 의존하고 있기 때문에 대체할 무언가를 찾지 않고 그냥 없애는 것은 불가능할 것이다. 그래서 파이썬은 [기준](https://wiki.python.org/moin/GlobalInterpreterLock) 을 가지고 GIL을 대체할 수 있는 방안이 있다면 언제든 [검토할 것이라고 말한다.](https://www.artima.com/weblogs/viewpost.jsp?thread=214235)
+
+실제 2021년 GIL을 제거한 cpython 버전을 제시한 사람이 있는데 이와 관련된 소스 코드는 [깃허브](https://github.com/colesbury/nogil), 더 자세한 세부사항과 원리에 대해 설명한 [문서](https://docs.google.com/document/d/18CXhDb1ygxg-YXNBJNzfzZsDFosB5e6BfnXLlejd9l0/edit#heading=h.gtyhlgwk321s)를 통해 확인해 볼 수 있다.
