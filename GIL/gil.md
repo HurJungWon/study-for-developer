@@ -1,5 +1,5 @@
 # GIL(Global Interpreter Lock)
->이번 글에 설명하는 내용은 다양한 파이썬 [구현체](https://github.com/vinta/awesome-python#implementations) 중 가장 오래되고 많이 사용하는 c 언어로 구현된 Cpython을 바탕으로 한 내용입니다.
+>이번 글에 설명하는 내용은 다양한 파이썬 인터프리터 [구현체](https://github.com/vinta/awesome-python#implementations) 중 가장 오래되고 많이 사용하는 c 언어로 구현된 Cpython을 바탕으로 한 내용입니다.
 
 # 1. GIL 이란?
 > Global Interpreter Lock  
@@ -122,7 +122,6 @@ if __name__ == '__main__':
 이 때 여러 스레드가 인터프리터를 동시에 실행시키면 reference count 가 정상적으로 이뤄지지 않아 없어져야 할 객체가 남아있거나 그 반대가 될 수 있어 thread safe 않다.
 
 즉 파이썬은 객체의 reference count의 정상 동작을 위해 mutex를 사용하는 것인데, 모든 것이 객체인 파이썬에서 객체 하나 하나에 mutex 를 사용하는 것은 큰 성능 저하를 가져오고 사용자가 직접 mutex 를 가져오고 풀어주는 과정에서 실수할 가능성이 높기 때문에 인터프리터 자체를 잠궈서 객체 참조 횟수에 대한 race condition을 해결한 것이다. 
-분명히 파이썬은   
 
 GIL 때문에 멀티 스레드 환경에서 병렬적인 작업에 대한 문제가 있음에도 GIL을 들어내는 것은 매우 어려운 일이다. 기존의 다른 라이브러리, 패키지, 기능들은 GIL에 의존하고 있기 때문에 대체할 무언가를 찾지 않고 그냥 없애는 것은 불가능할 것이다. 그래서 파이썬은 [기준](https://wiki.python.org/moin/GlobalInterpreterLock) 을 가지고 GIL을 대체할 수 있는 방안이 있다면 언제든 [검토할 것이라고 말한다.](https://www.artima.com/weblogs/viewpost.jsp?thread=214235)
 
