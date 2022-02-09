@@ -27,7 +27,7 @@
 
 [파이썬 위키](https://wiki.python.org/moin/GlobalInterpreterLock) 에서 GIL을 사용하는 이유는 race condition 발생을 방지하고 thread safety 를 보장하기 위함이라고 하며 파이썬이 메모리를 관리하는 방식이 thread safe 하지 않다고 말한다. 
 
-`race conditions`
+`race conditions`  
 앞서 말한 것처럼 프로세스에 속한 여러 스레드는 공유되는 메모리의 객체에 접근할 수 있다고 했다. 이 때 여러 스레드가 동시에 동일한 객체에 접근하면 우리가 원치 않는 방향으로 객체가 읽히거나 변경 될 수 있는 상태를 말한다. 이런 상황을 우리는 `thread-safe` 하지 않다고 표현한다.
 
 ```python
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 10번 째 값: 2000000
 ```
 
-`CPython's memory management is not thread-safe`
+`CPython's memory management is not thread-safe`  
 파이썬은 메모리 관리 방식은 객체의 참조 횟수(reference count)를 통해 GC(Garbage Collection)가 동작하면서 이뤄진다. 객체가 레퍼런스의 참조에 따라 count를 늘리고 줄이면서 count 가 0 이 되면 메모리에서 삭제한다.   
 이 때 여러 스레드가 인터프리터를 동시에 실행시키면 reference count 가 정상적으로 이뤄지지 않아 없어져야 할 객체가 남아있거나 그 반대가 될 수 있어 thread safe 않다.
 
